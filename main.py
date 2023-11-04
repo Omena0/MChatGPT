@@ -86,7 +86,7 @@ def filter(msg:str) -> list[str]:
     # Add to last chat
     last_chat.append(chatMessage)
     if len(last_chat) > 100: last_chat.pop(0)
-    if len(''.join(last_chat)) > 4050: last_chat.wrap(4050)[0]
+    while len(''.join(last_chat)) > 1000: last_chat.pop(0)
     print(f'[CHAT] {chatMessage}')
     
     # REMOVE_STRINGS
@@ -134,7 +134,7 @@ history:list[dict] = [{
     """.replace('        ',' ')
     }]
 
-send(f'[GPT] Starting... {config.PREFIX=}, {config.INTERVAL=}, {config.TOKENLIMIT=}')
+send(f'[GPT] Starting... PREFIX={config.PREFIX}, INTERVAL={config.INTERVAL}, TOKEN_LIMIT={config.TOKENLIMIT}')
 
 with open(path) as file:
     print(f'Loading chat messages from latest.log')
