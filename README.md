@@ -5,7 +5,7 @@
 
 ## Setup
 
-1. Create an OpenAI API token
+1. Create an OpenAI API token [OpenAI Keys](https://platform.openai.com/account/api-keys)
 2. Install python from [python.org](https://python.org/downloads)
 3. Download / clone this repo
 4. Create a new file called config.py
