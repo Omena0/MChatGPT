@@ -79,7 +79,7 @@ def filter(msg:str) -> list[str]:
         list[str]: 0: Sender's username, 1: Sent message
     """
     # Remove non chat messages
-    chatMessage = new.replace(f'[{t.strftime('%H:%M:%S')}] [Render thread/INFO]: [CHAT] ','<|>')
+    chatMessage = msg.replace(f'[{t.strftime('%H:%M:%S')}] [Render thread/INFO]: [CHAT] ','<|>')
     if not chatMessage.startswith('<|>') or '[AD]' in chatMessage: return
     chatMessage = chatMessage.replace('<|>','')
     
@@ -90,14 +90,16 @@ def filter(msg:str) -> list[str]:
     
     # REMOVE_STRINGS
     for i in config.REMOVE_STRINGS:
-        chatMessage = chatMessage.replace(i,'')
+        try: chatMessage = chatMessage.replace(i,'')
+        except: pass
     
     # Split messages
-    if not config.CHAT_SPLIT in chatMessage: return
-    chatMessage = chatMessage.split(config.CHAT_SPLIT+' ',1)
+    if not config.CHAT_SEPARATOR in chatMessage: return
+    chatMessage = chatMessage.split(config.CHAT_SEPARATOR+' ',1)
+    print(chatMessage)
     
-    # CHAT_SEPARATOR
-    for value,dir in config.CHAT_SEPARATOR:
+    # CHAT_SPLIT
+    for value,dir in config.CHAT_SPLIT:
         try: chatMessage.split(value,1)[dir]
         except: pass
     
@@ -105,10 +107,11 @@ def filter(msg:str) -> list[str]:
     for i in config.IGNORE_STRINGS:
         if i in chatMessage[0]: return
         
-    # Make sure that banned users or users that are already generating a response are ingnored
+    # Send response unless user is still generating one
     if chatMessage[1].startswith(config.PREFIX) and chatMessage[0] not in config.BANNED_USERS and chatMessage[0] not in activeusers:
         chatMessage[1] = chatMessage[1].replace(config.PREFIX,'')
         Thread(target=sendResponse,args=[chatMessage],daemon=True).start()
+    
 
 
 
@@ -150,11 +153,9 @@ while True:
         # Filter em
         chatMessage = filter(new)
         if chatMessage == None: continue
-
-        sendResponse(chatMessage)
         
         t.sleep(config.INTERVAL)
-    except: pass
+    except Exception as e: print(e) 
 
 
 
