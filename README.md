@@ -53,4 +53,5 @@
 
 ## Chat parsing
 
-a
+Chat is parsed according to the config.
+This means it will support basically any servers
