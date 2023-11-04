@@ -125,7 +125,7 @@ history:list[dict] = [{
         Messages will be supplied to you in the format of \"<user>: <message>\".
         Do not prefix your responses with anything.
         Answer in a short and concise way. The answers are supposed to fit in chat messages.
-        {config.EXTRAINFO}
+        {config.EXTRA_INFO}
         Your Token limit is {config.TOKENLIMIT}.
     """.replace('        ',' ')
     }]
