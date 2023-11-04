@@ -86,6 +86,7 @@ def filter(msg:str) -> list[str]:
     # Add to last chat
     last_chat.append(chatMessage)
     if len(last_chat) > 100: last_chat.pop(0)
+    if len(''.join(last_chat)) > 4050: last_chat.wrap(4050)[0]
     print(f'[CHAT] {chatMessage}')
     
     # REMOVE_STRINGS
