@@ -11,7 +11,7 @@ import config
 
 config.WHITELIST += config.OPERATORS
 
-version = 'V1.2'
+version = 'V1.24'
 
 ai.api_key = config.API_KEY
 path = config.LOG_PATH
@@ -52,14 +52,16 @@ def getResponse(msg:str,user:str,includeChat=True) -> list:
         msgs = 0
         response:ai.ChatCompletion = ai.ChatCompletion.create(
           model="gpt-3.5-turbo",
-          messages=[{"role":"system","content":"Summarize this chat. Make it as understandable as possible for another instance of ChatGPT. You have 1000 Tokens available. Format: <username> message"},{"role":"user","content":f'Chat: {last_chat}'}],
-          temperature=0.2,
+          messages=[{"role":"system","content":"Summarize the chat that the user sends you. You have 1000 Tokens available. Do not leave anything out. Use all the tokens you can to keep important information. Format: <username> message"},{"role":"user","content":f'Summarize This Chat shortly but without losing ANY information. You have 1000 tokens available. Try to use them all. Chat: {last_chat}'}],
+          temperature=0.1,
           max_tokens=1000,
           user=user
         )
         summarized = response.choices[0].message.content
         summarized = {"role":"system","content":f"Previous chat messages summarized: {summarized}"}
         history.append(summarized)
+    
+    print(f'\n{last_chat=}\n')
     
     print(f'\n{summarized=}\n')
         
@@ -218,7 +220,7 @@ def filter(msg:str,load=False) -> list[str]:
                     send('### GPT Stopped ###')
                     exit()
             else:
-                num = ('000'+str(r.randrange(0,1000)))[:-4]
+                num = ('000'+str(r.randrange(0,10000)))[:-4]
                 send(f'[CMD] Are you sure you want to stop? Send "{config.CMD_PREFIX}stop {num}" to confirm!')
     
     
