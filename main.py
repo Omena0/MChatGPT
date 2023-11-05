@@ -270,7 +270,7 @@ print(f'[!] Succesfully loaded {filtered_messages} messages in {round(b-a,4)} Se
 send(f'[!] Succesfully loaded {filtered_messages} messages in {round(b-a,3)} Seconds')
 
 while True: 
-    #try:
+    try:
         # Get Log entries
         with open(path) as file:
             new = file.readlines()[-1]
@@ -282,7 +282,7 @@ while True:
         if chatMessage == None: continue
         
         t.sleep(config.INTERVAL)
-    #except Exception as e: print(e) 
+    except Exception as e: print(e) 
 
 
 
