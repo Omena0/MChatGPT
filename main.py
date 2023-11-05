@@ -5,7 +5,13 @@ import time as t
 import pyautogui as p
 from threading import Thread
 from textwrap import wrap
+import os
+import random as r
 import config
+
+config.WHITELIST += config.OPERATORS
+
+version = 'V1.2'
 
 ai.api_key = config.API_KEY
 path = config.LOG_PATH
@@ -31,7 +37,7 @@ def sendResponse(chatMessage:list):
         print(f'[ERROR] {e}')
         send(f'[GPT] [ERROR] {e}')
 
-def getResponse(msg:str,user:str) -> list:
+def getResponse(msg:str,user:str,includeChat=True) -> list:
     """Get a response from ChatGPT
 
     Args:
@@ -41,13 +47,23 @@ def getResponse(msg:str,user:str) -> list:
     Returns:
         list: Response
     """
-    print({"role":"user","content":msg})
-    history.append({"role":"system","content":f"Previous 100 chat messages: {last_chat}"})
+    response:ai.ChatCompletion = ai.ChatCompletion.create(
+      model="gpt-3.5-turbo",
+      messages=[{"role":"system","content":"Summarize this chat shortly. Make it as understandable as possible for another instance of ChatGPT. Format: <username> message"},{"role":"user","content":f'Chat: {last_chat}'}],
+      temperature=0.2,
+      max_tokens=1000,
+      user=user
+    )
+    summarized = response.choices[0].message.content
+    summarized = {"role":"system","content":f"Previous chat messages summarized: {summarized}"}
+    history.append(summarized)
+    print(f'{summarized=}')
+        
     history.append({"role":"user","content":msg})
     response:ai.ChatCompletion = ai.ChatCompletion.create(
       model="gpt-3.5-turbo",
       messages=history,
-      temperature=0.1,
+      temperature=0.3,
       max_tokens=config.TOKENLIMIT,
       user=user
     )
@@ -69,9 +85,10 @@ def send(msg:str,noWrap=False):
         p.hotkey('enter')
         p.typewrite(v.replace('\n',''))
         p.hotkey('enter')
-        
 
-def filter(msg:str) -> list[str]:
+filtered_messages = 0    
+
+def filter(msg:str,load=False) -> list[str]:
     """Filters log messages to chat messages. Configurable in config.py
 
     Args:
@@ -81,20 +98,27 @@ def filter(msg:str) -> list[str]:
         list[str]: 0: Sender's username, 1: Sent message
     """
     
+    global filtered_messages, num
+    
     if config.DEBUG: print(f'[DEBUG] [LOG] {msg}')
     
     # Remove non chat messages
-    chatMessage = msg.replace(f'[{t.strftime("%H:%M:%S")}] [Render thread/INFO]: [CHAT] ','<|>')
+    msg = msg.split(' ',1)[1].replace('\n','')
+    chatMessage = msg.replace(f'[Render thread/INFO]: [CHAT] ','<|>')
     if not chatMessage.startswith('<|>') or '[AD]' in chatMessage: return
     chatMessage = chatMessage.replace('<|>','')
     
     if config.DEBUG: print('[DEBUG] Removed non chat messages')
     
-    # Add to last chat
-    last_chat.append(chatMessage)
-    if len(last_chat) > 100: last_chat.pop(0)
-    while len(''.join(last_chat)) > 1000: last_chat.pop(0)
-    print(f'[CHAT] {chatMessage}')
+    # History shit
+    last_chat.append(chatMessage.replace('\n',''))
+    while len('aaa'.join(last_chat)) > 3000: last_chat.pop(0)
+    if len(str(''.join(str(history)))) > 4000: history.pop(0)
+    if config.DEBUG: print(f'History length = {len(str(''.join(str(history))))}')
+    
+    if not load: print(f'[CHAT] {chatMessage}')
+    
+    filtered_messages += 1
     
     if config.DEBUG: print('[DEBUG] Added to last chat')
     
@@ -107,8 +131,7 @@ def filter(msg:str) -> list[str]:
     
     # Split messages
     if not config.CHAT_SEPARATOR in chatMessage: return
-    chatMessage = chatMessage.split(config.CHAT_SEPARATOR+' ',1)
-    print(chatMessage)
+    chatMessage = chatMessage.split(config.CHAT_SEPARATOR,1)
     
     if config.DEBUG: print('[DEBUG] Messages have been split')
     
@@ -124,20 +147,92 @@ def filter(msg:str) -> list[str]:
         if i in chatMessage[0]: return
     
     if config.DEBUG: print('[DEBUG] IGNORE_STRINGS passed')
+    
+    if load: return chatMessage
+    
+    print(chatMessage)
+    
+    if chatMessage[1].startswith(config.CMD_PREFIX) and chatMessage[0] in config.OPERATORS and chatMessage[0] not in config.BANNED_USERS:
+        cmd = chatMessage[1].split(config.CMD_PREFIX,1)[1].split(' ')
         
+        # !log clear !log clearall
+        if cmd[0] == 'log':
+            if cmd[1] == 'clear':
+                with open(config.LOG_PATH,'w') as file: file.write('')
+                send('Log has been cleared!')
+            if cmd[1] == 'clearall':
+                logsfolder = '/'.join(config.LOG_PATH.replace('\\','/').split('/')[:-1])
+                for i in os.listdir(logsfolder):
+                    if i.count('.') == 0: continue
+                    try: os.remove(f'{logsfolder}/{i}')
+                    except:
+                        with open(f'{logsfolder}/{i}','w') as file: file.write('')
+                send('All logs have been cleared!')
+
+        # !op !deop
+        if cmd[0] == 'op':
+            config.OPERATORS.append(' '.join(cmd[1:]))
+            send(f'[CMD] {' '.join(cmd[1:])} Is now an operator!')
+            
+        if cmd[0] == 'deop':
+            if ' '.join(cmd[1:]) in config.OPERATORS:
+                config.OPERATORS.remove(' '.join(cmd[1:]))
+                send(f'[CMD] {' '.join(cmd[1:])} Is no longer an operator!')
+            else: send(f'[CMD] [ERROR] {' '.join(cmd[1:])} Is not an operator!')
+            
+        # !whitelist add !whitelist remove
+        if cmd[0] == 'whitelist':
+            if cmd[1] == 'add':
+                config.WHITELIST.append(' '.join(cmd[2:]))
+                send(f'[CMD] {' '.join(cmd[2:])} Has been added to the whitelist.')
+            if cmd[1] == 'remove':
+                if ' '.join(cmd[2:]) in config.WHITELIST:
+                    config.WHITELIST.remove(' '.join(cmd[2:]))
+                    send(f'[CMD] {' '.join(cmd[2:])} Has been removed from the whitelist.')
+                else: send(f'[CMD] [ERROR] {' '.join(cmd[2:])} Is not whitelisted!')
+        
+        # !ban !unban
+        if cmd[0] == 'ban':
+            config.BANNED_USERS.append(' '.join(cmd[1:]))
+            send(f'[CMD] {' '.join(cmd[1:])} Has been banned.')
+            
+        if cmd[0] == 'unban':
+            if ' '.join(cmd[1:]) in config.BANNED_USERS:
+                config.BANNED_USERS.remove(' '.join(cmd[1:]))
+                send(f'[CMD] {' '.join(cmd[1:])} Has been unbanned.')
+            else:
+                send(f'[CMD] [ERROR] {' '.join(cmd[1:])} Is not banned.')
+        
+        
+        # !stop        
+        if cmd[0] == 'stop':
+            if len(cmd) > 1:
+                if cmd[1] == num:
+                    send('### GPT Stopped ###')
+                    exit()
+            else:
+                num = ('000'+str(r.randrange(0,1000)))[:-4]
+                send(f'[CMD] Are you sure you want to stop? Send "{config.CMD_PREFIX}stop {num}" to confirm!')
+    
+    
+    
     # Send response unless user is still generating one
     if chatMessage[1].startswith(config.PREFIX) and chatMessage[0] not in config.BANNED_USERS and chatMessage[0] not in activeusers:
+        if chatMessage[0] not in config.WHITELIST and config.WHITELIST != []: return chatMessage
         chatMessage[1] = chatMessage[1].replace(config.PREFIX,'')
         Thread(target=sendResponse,args=[chatMessage],daemon=True).start()
     
     if config.DEBUG: print('[DEBUG] Response sent succesfully')
     
+    return chatMessage
 
 
 
 print('[.] Preparing...')
 
 old = ''
+
+num = r.randrange(0,100000000000000000000000)
 
 last_chat:list[str] = []
 
@@ -149,27 +244,28 @@ history:list[dict] = [{
         Do not prefix your responses with anything.
         Answer in a short and concise way. The answers are supposed to fit in chat messages.
         {config.EXTRA_INFO}
-        Your Token limit is {config.TOKENLIMIT}.
+        Your Token limit is {config.TOKENLIMIT} tokens.
     """.replace('        ',' ')
     }]
 
-send(f'[GPT] Starting... PREFIX={config.PREFIX}, INTERVAL={config.INTERVAL}, TOKEN_LIMIT={config.TOKENLIMIT}')
+send(f'[GPT] Starting MChatGPT Version {version}')
 
 
 print(f'[.] Loading chat messages from latest.log...')
 
+a = t.time()
 with open(path) as file:
-    for i in file.readlines():
-        i = filter(i)
-        if i == None: continue
-        last_chat.append(i)
+    lines = file.readlines()
+    for i in lines:
+        i = filter(i,load=True)
+b = t.time()
 
+print(f'[!] Succesfully loaded {filtered_messages} messages in {round(b-a,4)} Seconds')
 
-print('[!] Messages loaded!')
-
+send(f'[!] Succesfully loaded {filtered_messages} messages in {round(b-a,3)} Seconds')
 
 while True: 
-    try:
+    #try:
         # Get Log entries
         with open(path) as file:
             new = file.readlines()[-1]
@@ -181,7 +277,7 @@ while True:
         if chatMessage == None: continue
         
         t.sleep(config.INTERVAL)
-    except Exception as e: print(e) 
+    #except Exception as e: print(e) 
 
 
 
