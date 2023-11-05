@@ -222,12 +222,14 @@ def filter(msg:str,load=False) -> list[str]:
     # Send response unless user is still generating one
     if chatMessage[1].startswith(config.PREFIX) and chatMessage[0] not in config.BANNED_USERS and chatMessage[0] not in activeusers:
         if chatMessage[0] not in config.WHITELIST and config.WHITELIST != []: return chatMessage
+        for i in timers:
+            if i["user"] == chatMessage[0] and i["time"] > t.time(): return chatMessage
         chatMessage[1] = chatMessage[1].replace(config.PREFIX,'')
         Thread(target=sendResponse,args=[chatMessage],daemon=True).start()
     
     if config.DEBUG: print('[DEBUG] Response sent succesfully')
     
-    t.sleep(config.REQUEST_INTERVAL)
+    timers.append({"user":chatMessage[0],"time":t.time()+config.REQUEST_INTERVAL})
     
     return chatMessage
 
@@ -238,6 +240,8 @@ print('[.] Preparing...')
 old = ''
 
 num = r.randrange(0,100000000000000000000000)
+
+timers:list[dict] = []
 
 last_chat:list[str] = []
 
