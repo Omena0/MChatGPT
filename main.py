@@ -47,23 +47,27 @@ def getResponse(msg:str,user:str,includeChat=True) -> list:
     Returns:
         list: Response
     """
-    response:ai.ChatCompletion = ai.ChatCompletion.create(
-      model="gpt-3.5-turbo",
-      messages=[{"role":"system","content":"Summarize this chat shortly. Make it as understandable as possible for another instance of ChatGPT. Format: <username> message"},{"role":"user","content":f'Chat: {last_chat}'}],
-      temperature=0.2,
-      max_tokens=1000,
-      user=user
-    )
-    summarized = response.choices[0].message.content
-    summarized = {"role":"system","content":f"Previous chat messages summarized: {summarized}"}
-    history.append(summarized)
-    print(f'{summarized=}')
+    global summarized, msgs
+    if msgs > config.SUMMARIZE_INTERVAL:
+        msgs = 0
+        response:ai.ChatCompletion = ai.ChatCompletion.create(
+          model="gpt-3.5-turbo",
+          messages=[{"role":"system","content":"Summarize this chat. Make it as understandable as possible for another instance of ChatGPT. You have 1000 Tokens available. Format: <username> message"},{"role":"user","content":f'Chat: {last_chat}'}],
+          temperature=0.2,
+          max_tokens=1000,
+          user=user
+        )
+        summarized = response.choices[0].message.content
+        summarized = {"role":"system","content":f"Previous chat messages summarized: {summarized}"}
+        history.append(summarized)
+    
+    print(f'\n{summarized=}\n')
         
     history.append({"role":"user","content":msg})
     response:ai.ChatCompletion = ai.ChatCompletion.create(
       model="gpt-3.5-turbo",
       messages=history,
-      temperature=0.3,
+      temperature=0.35,
       max_tokens=config.TOKENLIMIT,
       user=user
     )
@@ -98,7 +102,7 @@ def filter(msg:str,load=False) -> list[str]:
         list[str]: 0: Sender's username, 1: Sent message
     """
     
-    global filtered_messages, num
+    global filtered_messages, num, msgs
     
     if config.DEBUG: print(f'[DEBUG] [LOG] {msg}')
     
@@ -117,6 +121,8 @@ def filter(msg:str,load=False) -> list[str]:
     if config.DEBUG: print(f'History length = {len(str(''.join(str(history))))}')
     
     if not load: print(f'[CHAT] {chatMessage}')
+    
+    msgs += 1
     
     filtered_messages += 1
     
@@ -149,8 +155,6 @@ def filter(msg:str,load=False) -> list[str]:
     if config.DEBUG: print('[DEBUG] IGNORE_STRINGS passed')
     
     if load: return chatMessage
-    
-    print(chatMessage)
     
     if chatMessage[1].startswith(config.CMD_PREFIX) and chatMessage[0] in config.OPERATORS and chatMessage[0] not in config.BANNED_USERS:
         cmd = chatMessage[1].split(config.CMD_PREFIX,1)[1].split(' ')
@@ -222,12 +226,12 @@ def filter(msg:str,load=False) -> list[str]:
     # Send response unless user is still generating one
     if chatMessage[1].startswith(config.PREFIX) and chatMessage[0] not in config.BANNED_USERS and chatMessage[0] not in activeusers:
         if chatMessage[0] not in config.WHITELIST and config.WHITELIST != []: return chatMessage
-        for i in timers:
-            if i["user"] == chatMessage[0] and i["time"] > t.time(): return chatMessage
+        if chatMessage[0] not in config.OPERATORS:
+            for i in timers:
+                if i["user"] == chatMessage[0] and i["time"] > t.time(): return chatMessage
         chatMessage[1] = chatMessage[1].replace(config.PREFIX,'')
         Thread(target=sendResponse,args=[chatMessage],daemon=True).start()
-    
-    if config.DEBUG: print('[DEBUG] Response sent succesfully')
+        if config.DEBUG: print('[DEBUG] Response sent succesfully')
     
     timers.append({"user":chatMessage[0],"time":t.time()+config.REQUEST_INTERVAL})
     
@@ -238,6 +242,8 @@ def filter(msg:str,load=False) -> list[str]:
 print('[.] Preparing...')
 
 old = ''
+
+msgs = 1000
 
 num = r.randrange(0,100000000000000000000000)
 
