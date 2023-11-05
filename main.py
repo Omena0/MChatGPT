@@ -1,3 +1,4 @@
+print('[.] Initializing...')
 
 import openai as ai
 import time as t
@@ -26,6 +27,7 @@ def sendResponse(chatMessage:list):
         send(f'[GPT] [{chatMessage[0]}] {msg}')
         activeusers.remove(chatMessage[0])
     except Exception as e:
+        if not config.SEND_ERRORS: return
         print(f'[ERROR] {e}')
         send(f'[GPT] [ERROR] {e}')
 
@@ -78,10 +80,15 @@ def filter(msg:str) -> list[str]:
     Returns:
         list[str]: 0: Sender's username, 1: Sent message
     """
+    
+    if config.DEBUG: print(f'[DEBUG] [LOG] {msg}')
+    
     # Remove non chat messages
-    chatMessage = msg.replace(f'[{t.strftime('%H:%M:%S')}] [Render thread/INFO]: [CHAT] ','<|>')
+    chatMessage = msg.replace(f'[{t.strftime("%H:%M:%S")}] [Render thread/INFO]: [CHAT] ','<|>')
     if not chatMessage.startswith('<|>') or '[AD]' in chatMessage: return
     chatMessage = chatMessage.replace('<|>','')
+    
+    if config.DEBUG: print('[DEBUG] Removed non chat messages')
     
     # Add to last chat
     last_chat.append(chatMessage)
@@ -89,34 +96,46 @@ def filter(msg:str) -> list[str]:
     while len(''.join(last_chat)) > 1000: last_chat.pop(0)
     print(f'[CHAT] {chatMessage}')
     
+    if config.DEBUG: print('[DEBUG] Added to last chat')
+    
     # REMOVE_STRINGS
     for i in config.REMOVE_STRINGS:
         try: chatMessage = chatMessage.replace(i,'')
         except: pass
+        
+    if config.DEBUG: print('[DEBUG] REMOVE_STRINGS done')
     
     # Split messages
     if not config.CHAT_SEPARATOR in chatMessage: return
     chatMessage = chatMessage.split(config.CHAT_SEPARATOR+' ',1)
     print(chatMessage)
     
+    if config.DEBUG: print('[DEBUG] Messages have been split')
+    
     # CHAT_SPLIT
     for value,dir in config.CHAT_SPLIT:
         try: chatMessage.split(value,1)[dir]
         except: pass
+        
+    if config.DEBUG: print('[DEBUG] CHAT_SPLIT done')
     
     # IGNORE_STRINGS
     for i in config.IGNORE_STRINGS:
         if i in chatMessage[0]: return
+    
+    if config.DEBUG: print('[DEBUG] IGNORE_STRINGS passed')
         
     # Send response unless user is still generating one
     if chatMessage[1].startswith(config.PREFIX) and chatMessage[0] not in config.BANNED_USERS and chatMessage[0] not in activeusers:
         chatMessage[1] = chatMessage[1].replace(config.PREFIX,'')
         Thread(target=sendResponse,args=[chatMessage],daemon=True).start()
     
+    if config.DEBUG: print('[DEBUG] Response sent succesfully')
+    
 
 
 
-print('Starting...')
+print('[.] Preparing...')
 
 old = ''
 
@@ -136,12 +155,18 @@ history:list[dict] = [{
 
 send(f'[GPT] Starting... PREFIX={config.PREFIX}, INTERVAL={config.INTERVAL}, TOKEN_LIMIT={config.TOKENLIMIT}')
 
+
+print(f'[.] Loading chat messages from latest.log...')
+
 with open(path) as file:
-    print(f'Loading chat messages from latest.log')
     for i in file.readlines():
         i = filter(i)
         if i == None: continue
         last_chat.append(i)
+
+
+print('[!] Messages loaded!')
+
 
 while True: 
     try:
