@@ -182,6 +182,9 @@ def filter(msg:str,load=False) -> list[str]:
             
         # !whitelist add !whitelist remove
         if cmd[0] == 'whitelist':
+            if cmd[1] == 'off':
+                config.WHITELIST = []
+                send('[CMD] Whitelist Cleared.')
             if cmd[1] == 'add':
                 config.WHITELIST.append(' '.join(cmd[2:]))
                 send(f'[CMD] {' '.join(cmd[2:])} Has been added to the whitelist.')
@@ -223,6 +226,8 @@ def filter(msg:str,load=False) -> list[str]:
         Thread(target=sendResponse,args=[chatMessage],daemon=True).start()
     
     if config.DEBUG: print('[DEBUG] Response sent succesfully')
+    
+    t.sleep(config.REQUEST_INTERVAL)
     
     return chatMessage
 

@@ -13,22 +13,30 @@
 
     ```python
     ## Basic config
-    API_KEY  = '<API KEY HERE>'
-    LOG_PATH = '<LOG PATH HERE>'
+    API_KEY  = 'ur key'
+    LOG_PATH = 'ur log path'
 
     ## GPT Config
-    PREFIX       = 'gpt ' # The prefix used for requests.
-    INTERVAL     = 0.5    # Delay between checking latest.log.
-    TOKENLIMIT   = 128    # Maximum tokens ChatGPT can generate.
-    BANNED_USERS = []     # Users that cannot send requests.
-    EXTRA_INFO   = ''     # Info added to ChatGPT's first system message.
+    PREFIX           = 'gpt ' # The prefix used for requests.
+    CMD_PREFIX       = '!'    # The prefix used for custom commands.
+    INTERVAL         = 0.     # Delay between checking latest.log.
+    REQUEST_INTERVAL = 5      # Delay between requests. Does not apply to operators.
+    TOKENLIMIT       = 128    # Maximum tokens ChatGPT can generate.
+    BANNED_USERS     = []     # Users that cannot send requests.
+    WHITELIST        = []     # If not blank, only theese users can send requests.
+    OPERATORS        = ['Omena0MC']     # Users here can use commands, and can send requests
+    EXTRA_INFO       = ''     # Info added to ChatGPT's first system message.
 
     ## Chat Config
     # Set this to the characted that splits the username and message.
-    CHAT_SEPARATOR = ':'
+    CHAT_SEPARATOR = '> '
+
+    # Whether to send errors to chat (ratelimit ect)
+    # You should always keep this enabled.
+    SEND_ERRORS = True
 
     # Strings to remove from messages (includes username)
-    REMOVE_STRINGS = ['[VIP] ','[CHEESE] ',' DEFAULT ']
+    REMOVE_STRINGS = ['[VIP] ','[CHEESE] ',' DEFAULT ','<']
 
     # If theese r in a username it will get ignored
     IGNORE_STRINGS = ['[MINEHUT]']
@@ -38,7 +46,11 @@
     # Removes everything from the first appearance of <value>
     # to the direction specified.
     #Format: {"value":"<value>","split":<0 or 1>} (0 = left, 1 = right)
-    CHAT_SPLIT = []
+    CHAT_SPLIT = [{"value":" ","split":0}]
+
+    # DEBUG LOGGING
+    DEBUG = False
+
     ```
 
 6. Open minecraft
