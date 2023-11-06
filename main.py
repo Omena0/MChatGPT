@@ -11,7 +11,7 @@ import config
 
 config.WHITELIST += config.OPERATORS
 
-version = 'V1.24'
+version = 'V1.25'
 
 ai.api_key = config.API_KEY
 path = config.LOG_PATH
@@ -120,7 +120,7 @@ def filter(msg:str,load=False) -> list[str]:
     last_chat.append(chatMessage.replace('\n',''))
     while len('aaa'.join(last_chat)) > 3000: last_chat.pop(0)
     if len(str(''.join(str(history)))) > 4000: history.pop(0)
-    if config.DEBUG: print(f'History length = {len(str(''.join(str(history))))}')
+    if config.DEBUG: print(f'History length = {len(str("".join(str(history))))}')
     
     if not load: print(f'[CHAT] {chatMessage}')
     
@@ -178,13 +178,13 @@ def filter(msg:str,load=False) -> list[str]:
         # !op !deop
         if cmd[0] == 'op':
             config.OPERATORS.append(' '.join(cmd[1:]))
-            send(f'[CMD] {' '.join(cmd[1:])} Is now an operator!')
+            send(f'[CMD] {" ".join(cmd[1:])} Is now an operator!')
             
         if cmd[0] == 'deop':
             if ' '.join(cmd[1:]) in config.OPERATORS:
                 config.OPERATORS.remove(' '.join(cmd[1:]))
-                send(f'[CMD] {' '.join(cmd[1:])} Is no longer an operator!')
-            else: send(f'[CMD] [ERROR] {' '.join(cmd[1:])} Is not an operator!')
+                send(f'[CMD] {" ".join(cmd[1:])} Is no longer an operator!')
+            else: send(f'[CMD] [ERROR] {" ".join(cmd[1:])} Is not an operator!')
             
         # !whitelist add !whitelist remove
         if cmd[0] == 'whitelist':
@@ -192,25 +192,25 @@ def filter(msg:str,load=False) -> list[str]:
                 config.WHITELIST = []
                 send('[CMD] Whitelist Cleared.')
             if cmd[1] == 'add':
-                config.WHITELIST.append(' '.join(cmd[2:]))
-                send(f'[CMD] {' '.join(cmd[2:])} Has been added to the whitelist.')
+                config.WHITELIST.append(" ".join(cmd[2:]))
+                send(f'[CMD] {" ".join(cmd[2:])} Has been added to the whitelist.')
             if cmd[1] == 'remove':
                 if ' '.join(cmd[2:]) in config.WHITELIST:
-                    config.WHITELIST.remove(' '.join(cmd[2:]))
-                    send(f'[CMD] {' '.join(cmd[2:])} Has been removed from the whitelist.')
-                else: send(f'[CMD] [ERROR] {' '.join(cmd[2:])} Is not whitelisted!')
+                    config.WHITELIST.remove(" ".join(cmd[2:]))
+                    send(f'[CMD] {" ".join(cmd[2:])} Has been removed from the whitelist.')
+                else: send(f'[CMD] [ERROR] {" ".join(cmd[2:])} Is not whitelisted!')
         
         # !ban !unban
         if cmd[0] == 'ban':
             config.BANNED_USERS.append(' '.join(cmd[1:]))
-            send(f'[CMD] {' '.join(cmd[1:])} Has been banned.')
+            send(f'[CMD] {" ".join(cmd[1:])} Has been banned.')
             
         if cmd[0] == 'unban':
             if ' '.join(cmd[1:]) in config.BANNED_USERS:
-                config.BANNED_USERS.remove(' '.join(cmd[1:]))
-                send(f'[CMD] {' '.join(cmd[1:])} Has been unbanned.')
+                config.BANNED_USERS.remove(" ".join(cmd[1:]))
+                send(f'[CMD] {" ".join(cmd[1:])} Has been unbanned.')
             else:
-                send(f'[CMD] [ERROR] {' '.join(cmd[1:])} Is not banned.')
+                send(f'[CMD] [ERROR] {" ".join(cmd[1:])} Is not banned.')
         
         
         # !stop        

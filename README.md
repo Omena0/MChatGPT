@@ -19,7 +19,7 @@
     ## GPT Config
     PREFIX           = 'gpt ' # The prefix used for requests.
     CMD_PREFIX       = '!'    # The prefix used for custom commands.
-    INTERVAL         = 0.     # Delay between checking latest.log.
+    INTERVAL         = 0.5    # Delay between checking latest.log.
     REQUEST_INTERVAL = 5      # Delay between requests. Does not apply to operators.
     TOKENLIMIT       = 128    # Maximum tokens ChatGPT can generate.
     BANNED_USERS     = []     # Users that cannot send requests.
