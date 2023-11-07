@@ -6,22 +6,21 @@
 ## Setup
 
 1. Create an OpenAI API token [OpenAI Keys](https://platform.openai.com/account/api-keys)
-2. Install python from [python.org](https://python.org/downloads)
-3. Download / clone this repo
-4. Create a new file called config.py
-5. Write this into it (fill in the blanks):
+2. Download main.exe from dist or relases (if there are any idk)
+3. Create a new file called config.txt
+4. Write this into it (fill in the blanks):
 
     ```python
     ## Basic config
-    API_KEY  = 'ur key'
-    LOG_PATH = 'ur log path'
+    API_KEY  = 'ur OpenAI API Token here'
+    LOG_PATH = 'ur log path here'
 
     ## GPT Config
     PREFIX             = 'gpt ' # The prefix used for requests.
     CMD_PREFIX         = '!'    # The prefix used for custom commands.
     INTERVAL           = 0.5    # Delay between checking latest.log.
     REQUEST_INTERVAL   = 5      # Delay between requests. Does not apply to operators.
-    SUMMARIZE_INTERVAL = 20     # How many chat messages should pass to summarize previous messages again.
+    SUMMARIZE_INTERVAL = 10     # How many chat messages should pass to summarize previous messages again.
     TOKENLIMIT         = 128    # Maximum tokens ChatGPT can generate.
     BANNED_USERS       = []     # Users that cannot send requests.
     WHITELIST          = []     # If not blank, only theese users can send requests.
@@ -37,25 +36,25 @@
     SEND_ERRORS = True
 
     # Strings to remove from messages (includes username)
-    REMOVE_STRINGS = ['[VIP] ','[CHEESE] ',' DEFAULT ','<']
+    REMOVE_STRINGS = []
 
     # If theese r in a username it will get ignored
-    IGNORE_STRINGS = ['[MINEHUT]']
+    IGNORE_STRINGS = []
 
     ### ADVANCED CONFIG ###
 
     # Removes everything from the first appearance of <value>
     # to the direction specified.
     #Format: {"value":"<value>","split":<0 or 1>} (0 = left, 1 = right)
-    CHAT_SPLIT = [{"value":" ","split":0}]
+
+    CHAT_SPLIT = []
 
     # DEBUG LOGGING
     DEBUG = False
-
     ```
 
-6. Open minecraft
-7. Run main.py and focus your minecraft window. Make sure to now have chat opened or anything.
+5. Open minecraft
+6. Run main.exe and focus your minecraft window.
 
 ## Capabilities
 
